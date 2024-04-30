@@ -1,17 +1,18 @@
 import telebot
 from sqlite3 import connect
 from telebot import types
+import random
 
 
 # Указываем токен бота
-TOKEN = 'my_token'
+TOKEN = 'your_token'
 
 # Создаем объект бота
 bot = telebot.TeleBot(TOKEN)
 
 
 
-ADMIN_ID=945243562
+ADMIN_ID="your_admin_id"
 
 
 
@@ -191,9 +192,10 @@ def commands_handler(message):
             list['u']=""
             list['t']=""
             try:
-                cur.execute("SELECT * FROM quotes ORDER BY RANDOM() LIMIT 1;")
+                cur.execute("SELECT * FROM quotes;")
                 con.commit()
-                l=cur.fetchone()
+                ll=cur.fetchall()
+                l=random.choice(ll)
                 list['u']=l[2]
                 list['t']=l[1]
 
