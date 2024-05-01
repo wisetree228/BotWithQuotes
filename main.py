@@ -14,8 +14,8 @@ bot = telebot.TeleBot(TOKEN)
 
 ADMIN_ID="your_admin_id"
 
-
-
+d={}
+d['l']=[]
 
 
 
@@ -110,6 +110,9 @@ def selectOneAll(table):
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def handle_start(message):
+    if not(message.chat.id in d['l']):
+        d['l'].append(message.chat.id)
+
     #bot.send_message(message.chat.id, "hi")
     print(message.chat.id, message.from_user.username, message.text)
     if message.chat.id!=ADMIN_ID:
@@ -128,6 +131,9 @@ def handle_start(message):
 
 @bot.message_handler()
 def commands_handler(message):
+    if not(message.chat.id in d['l']):
+        d['l'].append(message.chat.id)
+
     print(message.chat.id, message.from_user.username, message.text)
     if message.text=="Добавить цитату":
         bot.send_message(message.chat.id, "Введите цитату, которую вы хотите отправить админу:")
@@ -156,7 +162,7 @@ def commands_handler(message):
             cur.execute(f'DELETE FROM predl WHERE id={quote[0]};')
             con.commit()
             id = quote[3]
-            bot.send_message(id, f"Ваша цитата {quote[1]} одобрена!")
+            bot.send_message(id, f"Ваша цитата \n {quote[1]} \n одобрена!")
         except Exception as e:
             print(f"Ошибка при обработке цитаты: {e}")
             con.rollback()
@@ -175,7 +181,7 @@ def commands_handler(message):
             cur.execute(f'DELETE FROM predl WHERE id={quote[0]};')
             con.commit()
             id = quote[3]
-            bot.send_message(id, f"Ваша цитата {quote[1]} не одобрена!")
+            bot.send_message(id, f"Ваша цитата \n {quote[1]} \n не одобрена!")
         except Exception as e:
             print(f"Ошибка при обработке цитаты: {e}")
             con.rollback()
@@ -210,8 +216,35 @@ def commands_handler(message):
             bot.send_message(message.chat.id, f"Цитата от @{list['u']} \n {list['t']}")
         else:
             bot.send_message(message.chat.id, f"Цитат пока нет! Но ты можешь добавить и отправить админу на модерацию")
+    elif message.text=="Del" and message.chat.id==ADMIN_ID:
+        bot.send_message(ADMIN_ID, "Напиши цитату которую сейчас удалишь")
+        bot.register_next_step_handler(message, delmes)
 
 
+
+
+
+
+
+
+
+def delmes(message):
+    print(message.chat.id, message.from_user.username, message.text)
+    con = connect('base.db')
+    cur = con.cursor()
+    try:
+        q=selectOne('quotes', f"text='{message.text}'")
+        cur.execute(f"DELETE FROM quotes WHERE text='{message.text}';")
+        con.commit()
+        bot.send_message(q[3], f"Ваша цитата \n {message.text} \n удалена админом @pppggg228")
+
+    except Exception as e:
+        print(f"Ошибка при удалении цитаты: {e}")
+        bot.send_message(ADMIN_ID, f"Ошибка при удалении: {e}")
+        con.rollback()
+    finally:
+        cur.close()
+        con.close()
 
 
 
@@ -229,7 +262,13 @@ def forward_to_admin(message):
     con.close()
 
 
+list=selectAll('quotes')
 
+for i in list:
+    if not(i[3] in d['l']):
+        d['l'].append(i[3])
+for i in d['l']:
+    bot.send_message(i, "Бот снова функционирует, админ добавил себе восможность удалять ваши цитаты! \n От админа @pppggg228")
 
 
 
